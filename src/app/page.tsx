@@ -1,9 +1,9 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useGameStore } from '@/store/game-store';
 import Navigation from '@/components/game/Navigation';
-import PWAInstallPrompt from '@/components/game/PWAInstallPrompt';
 import ErrorBoundary from '@/components/game/ErrorBoundary';
 import WarRoomUI from '@/components/game/WarRoomUI';
 import WorldMapUI from '@/components/game/WorldMapUI';
@@ -47,7 +47,43 @@ const BattleScene = dynamic(() => import('@/components/game/BattleScene'), {
   ),
 });
 
+// شاشة التحميل الثابتة (تطابق HTML المُولّد من SSR)
+function SplashScreen() {
+  return (
+    <div
+      className="w-full h-dvh flex flex-col items-center justify-center"
+      style={{ background: '#050810' }}
+    >
+      <div className="text-5xl mb-6">⚔️</div>
+      <h1
+        className="text-xl font-bold mb-3"
+        style={{ color: '#c9a227' }}
+      >
+        قبضة الجنرال
+      </h1>
+      <div className="w-10 h-10 border-2 border-[#c9a227]/30 border-t-[#c9a227] rounded-full animate-spin" />
+      <p className="text-[#c9a227]/40 text-xs mt-4">جاري تجهيز المعركة...</p>
+    </div>
+  );
+}
+
 export default function Home() {
+  // تأخير العرض حتى يكتمل الـ mount على الجهاز فقط
+  // هذا يمنع Hydration Mismatch (خطأ React #185)
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return <SplashScreen />;
+  }
+
+  return <GameApp />;
+}
+
+function GameApp() {
   const currentScreen = useGameStore((s) => s.currentScreen);
   const battleState = useGameStore((s) => s.battleState);
 
@@ -66,7 +102,6 @@ export default function Home() {
           {currentScreen === 'world-map' && <WorldMapScene />}
           {currentScreen === 'barracks' && (
             <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, #0a1018, #050810)' }}>
-              {/* خلفية بسيطة للثكنات */}
               <div className="absolute inset-0 flex items-center justify-center opacity-5">
                 <span className="text-[200px]">🏰</span>
               </div>
@@ -80,9 +115,6 @@ export default function Home() {
 
           {/* التنقل السفلي */}
           <Navigation />
-
-          {/* إشعار تثبيت PWA */}
-          <PWAInstallPrompt />
         </div>
       )}
     </ErrorBoundary>
