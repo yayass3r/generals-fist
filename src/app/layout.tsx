@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist_Mono } from "next/font/google";
 import "./globals.css";
+import PWARegister from "@/components/game/PWARegister";
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -9,9 +10,27 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "قبضة الجنرال — The General's Fist",
-  description: "لعبة استراتيجية Idle - غرفة العمليات",
+  description: "لعبة استراتيجية Idle عسكرية - غرفة العمليات والمعارك التكتيكية",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "قبضة الجنرال",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
   icons: {
-    icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>",
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
   },
 };
 
@@ -31,6 +50,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="apple-touch-icon" href="/icon-192.png" />
+        <link rel="apple-touch-startup-image" href="/splash.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="قبضة الجنرال" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="theme-color" content="#050810" />
+        <meta name="msapplication-TileColor" content="#050810" />
+        <meta name="msapplication-TileImage" content="/icon-192.png" />
+      </head>
       <body
         className={`${geistMono.variable} antialiased`}
         style={{
@@ -45,6 +76,7 @@ export default function RootLayout({
         }}
       >
         {children}
+        <PWARegister />
       </body>
     </html>
   );

@@ -1,0 +1,44 @@
+{
+  "name": "قبضة الجنرال — The General's Fist",
+  "short_name": "قبضة الجنرال",
+  "description": "لعبة استراتيجية Idle عسكرية - غرفة العمليات والمعارك التكتيكية",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#050810",
+  "theme_color": "#050810",
+  "dir": "rtl",
+  "lang": "ar",
+  "scope": "/",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/splash.png",
+      "sizes": "768x1344",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "شاشة اللعبة الرئيسية"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "غرفة العمليات",
+      "url": "/",
+      "description": "الانتقال لغرفة العمليات"
+    }
+  ]
+}

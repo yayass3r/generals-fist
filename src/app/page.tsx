@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic';
 import { useGameStore } from '@/store/game-store';
 import Navigation from '@/components/game/Navigation';
+import PWAInstallPrompt from '@/components/game/PWAInstallPrompt';
 import WarRoomUI from '@/components/game/WarRoomUI';
 import WorldMapUI from '@/components/game/WorldMapUI';
 import BarracksUI from '@/components/game/BarracksUI';
@@ -80,6 +81,9 @@ export default function Home() {
 
       {/* التنقل السفلي */}
       <Navigation />
+
+      {/* إشعار تثبيت PWA */}
+      <PWAInstallPrompt />
     </div>
   );
 }
