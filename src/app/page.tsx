@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import { useGameStore } from '@/store/game-store';
 import Navigation from '@/components/game/Navigation';
 import PWAInstallPrompt from '@/components/game/PWAInstallPrompt';
+import ErrorBoundary from '@/components/game/ErrorBoundary';
 import WarRoomUI from '@/components/game/WarRoomUI';
 import WorldMapUI from '@/components/game/WorldMapUI';
 import BarracksUI from '@/components/game/BarracksUI';
@@ -50,40 +51,40 @@ export default function Home() {
   const currentScreen = useGameStore((s) => s.currentScreen);
   const battleState = useGameStore((s) => s.battleState);
 
-  // أثناء المعركة، اعرض المشهد والواجهة
-  if (battleState) {
-    return (
-      <div className="w-full h-dvh overflow-hidden relative" style={{ background: '#0a0808' }}>
-        <BattleScene />
-        <BattleUI />
-      </div>
-    );
-  }
-
   return (
-    <div className="w-full h-dvh overflow-hidden relative" style={{ background: '#050810' }}>
-      {/* المشهد ثلاثي الأبعاد حسب الشاشة */}
-      {currentScreen === 'war-room' && <IsometricScene />}
-      {currentScreen === 'world-map' && <WorldMapScene />}
-      {currentScreen === 'barracks' && (
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, #0a1018, #050810)' }}>
-          {/* خلفية بسيطة للثكنات */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-5">
-            <span className="text-[200px]">🏰</span>
-          </div>
+    <ErrorBoundary>
+      {/* أثناء المعركة، اعرض المشهد والواجهة */}
+      {battleState ? (
+        <div className="w-full h-dvh overflow-hidden relative" style={{ background: '#0a0808' }}>
+          <BattleScene />
+          <BattleUI />
+        </div>
+      ) : (
+        <div className="w-full h-dvh overflow-hidden relative" style={{ background: '#050810' }}>
+          {/* المشهد ثلاثي الأبعاد حسب الشاشة */}
+          {currentScreen === 'war-room' && <IsometricScene />}
+          {currentScreen === 'world-map' && <WorldMapScene />}
+          {currentScreen === 'barracks' && (
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, #0a1018, #050810)' }}>
+              {/* خلفية بسيطة للثكنات */}
+              <div className="absolute inset-0 flex items-center justify-center opacity-5">
+                <span className="text-[200px]">🏰</span>
+              </div>
+            </div>
+          )}
+
+          {/* واجهة المستخدم */}
+          {currentScreen === 'war-room' && <WarRoomUI />}
+          {currentScreen === 'world-map' && <WorldMapUI />}
+          {currentScreen === 'barracks' && <BarracksUI />}
+
+          {/* التنقل السفلي */}
+          <Navigation />
+
+          {/* إشعار تثبيت PWA */}
+          <PWAInstallPrompt />
         </div>
       )}
-
-      {/* واجهة المستخدم */}
-      {currentScreen === 'war-room' && <WarRoomUI />}
-      {currentScreen === 'world-map' && <WorldMapUI />}
-      {currentScreen === 'barracks' && <BarracksUI />}
-
-      {/* التنقل السفلي */}
-      <Navigation />
-
-      {/* إشعار تثبيت PWA */}
-      <PWAInstallPrompt />
-    </div>
+    </ErrorBoundary>
   );
 }
