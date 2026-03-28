@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useGameStore } from '@/store/game-store';
 import {
   TROOP_CONFIGS,
@@ -22,10 +22,11 @@ import {
 } from '@/lib/chain-of-command';
 import { BUILDINGS, getUpgradeCost, getBuildingProductionPerHour } from '@/lib/idle-system';
 import { getTotalProductionPerHour } from '@/lib/idle-system';
+import { TECH_TREE, getAvailableTechs, canResearch, type TechNode, type TechTier } from '@/lib/tech-tree';
 import type { TroopType } from '@/lib/battle-engine';
 import type { BuildingState } from '@/lib/idle-system';
 
-type BarracksTab = 'production' | 'squads' | 'commanders';
+type BarracksTab = 'production' | 'squads' | 'commanders' | 'research';
 
 export default function BarracksUI() {
   const [activeTab, setActiveTab] = useState<BarracksTab>('squads');
@@ -44,6 +45,7 @@ export default function BarracksUI() {
           { id: 'squads' as const, label: '🎖️ القوات', },
           { id: 'production' as const, label: '🏭 الإنتاج', },
           { id: 'commanders' as const, label: '⭐ القادة', },
+          { id: 'research' as const, label: '🔬 بحث', },
         ]).map(tab => (
           <button
             key={tab.id}
@@ -65,6 +67,7 @@ export default function BarracksUI() {
         {activeTab === 'squads' && <SquadsTab />}
         {activeTab === 'production' && <ProductionTab />}
         {activeTab === 'commanders' && <CommandersTab />}
+        {activeTab === 'research' && <ResearchTab />}
       </div>
     </div>
   );
@@ -407,6 +410,246 @@ function CommandersTab() {
               {isAssigned && (
                 <span className="text-[9px] text-white/20">✓ معيّن</span>
               )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ═══════════════════════════════
+// تبويب البحث والتطوير
+// ═══════════════════════════════
+
+const TIER_CONFIG: Record<TechTier, { nameAr: string; color: string; icon: string }> = {
+  1: { nameAr: 'أساسي', color: '#4ade80', icon: '📗' },
+  2: { nameAr: 'متوسط', color: '#3b82f6', icon: '📘' },
+  3: { nameAr: 'متقدم', color: '#a855f7', icon: '📕' },
+};
+
+const CATEGORY_CONFIG: Record<string, { nameAr: string; icon: string }> = {
+  weapons: { nameAr: 'أسلحة', icon: '⚔️' },
+  defense: { nameAr: 'دفاع', icon: '🛡️' },
+  logistics: { nameAr: 'لوجستيات', icon: '📦' },
+  intelligence: { nameAr: 'استخبارات', icon: '📡' },
+  special: { nameAr: 'خاص', icon: '⭐' },
+};
+
+function ResearchTab() {
+  const research = useGameStore((s) => s.research);
+  const resources = useGameStore((s) => s.resources);
+  const startResearch = useGameStore((s) => s.startResearch);
+
+  const availableTechs = useMemo(() => getAvailableTechs(research.completedTechs), [research.completedTechs]);
+
+  // تجميع التقنيات حسب المستوى
+  const tiers = useMemo(() => {
+    const grouped: Record<TechTier, TechNode[]> = { 1: [], 2: [], 3: [] };
+    for (const tech of TECH_TREE) {
+      grouped[tech.tier].push(tech);
+    }
+    return grouped;
+  }, []);
+
+  // التقنية الجاري بحثها
+  const inProgressTech = useMemo(() => {
+    if (!research.inProgress) return null;
+    return TECH_TREE.find(t => t.id === research.inProgress) ?? null;
+  }, [research.inProgress]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    if (mins > 0) return `${mins}د ${secs}ث`;
+    return `${secs}ث`;
+  };
+
+  return (
+    <div className="space-y-4 mt-2">
+      {/* حالة البحث الحالية */}
+      {inProgressTech && (
+        <div
+          className="rounded-xl p-3 space-y-2"
+          style={{
+            background: 'rgba(201,162,39,0.08)',
+            border: '1px solid rgba(201,162,39,0.2)',
+          }}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-base">{inProgressTech.icon}</span>
+              <div>
+                <div className="text-[10px] font-bold text-white">جاري البحث: {inProgressTech.nameAr}</div>
+                <div className="text-[8px] text-white/30">{inProgressTech.description}</div>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-[9px]">
+              <span className="text-white/40">التقدم</span>
+              <span className="font-bold text-[#c9a227]">{Math.floor(research.progressPercent)}%</span>
+            </div>
+            <div className="h-2.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+              <div
+                className="h-full rounded-full transition-all duration-1000"
+                style={{
+                  width: `${research.progressPercent}%`,
+                  background: 'linear-gradient(90deg, #c9a227, #f0d060)',
+                }}
+              />
+            </div>
+            <div className="text-[8px] text-white/20 text-center">
+              الوقت المتبقي: ~{formatTime((inProgressTech.researchTime / 100) * (100 - research.progressPercent))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* البحث النشط - عدد مكتمل */}
+      <div className="flex items-center justify-center gap-3 text-[9px]">
+        <span className="text-white/30">✅ مكتمل: {research.completedTechs.length}/{TECH_TREE.length}</span>
+        <span className="text-white/30">📋 متاح: {availableTechs.length}</span>
+      </div>
+
+      {/* شجرة التقنيات حسب المستوى */}
+      {([1, 2, 3] as TechTier[]).map(tier => {
+        const tierInfo = TIER_CONFIG[tier];
+        const techs = tiers[tier];
+        return (
+          <div key={tier} className="space-y-2">
+            {/* عنوان المستوى */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm">{tierInfo.icon}</span>
+              <span className="text-[11px] font-bold" style={{ color: tierInfo.color }}>المستوى {tier}: {tierInfo.nameAr}</span>
+              <div className="flex-1 h-px" style={{ background: `${tierInfo.color}20` }} />
+            </div>
+
+            {/* بطاقات التقنيات */}
+            <div className="space-y-2">
+              {techs.map(tech => {
+                const isCompleted = research.completedTechs.includes(tech.id);
+                const isInProgress = research.inProgress === tech.id;
+                const isAvailable = availableTechs.some(t => t.id === tech.id);
+                const isLocked = !isCompleted && !isAvailable && !isInProgress;
+                const canStart = canResearch(tech.id, research.completedTechs, research.inProgress, resources);
+                const catConfig = CATEGORY_CONFIG[tech.category];
+
+                return (
+                  <div
+                    key={tech.id}
+                    className="rounded-xl p-3 space-y-2 transition-all"
+                    style={{
+                      background: isCompleted
+                        ? 'rgba(74,222,128,0.06)'
+                        : isInProgress
+                          ? 'rgba(201,162,39,0.08)'
+                          : 'rgba(0,0,0,0.3)',
+                      border: `1px solid ${
+                        isCompleted
+                          ? 'rgba(74,222,128,0.2)'
+                          : isInProgress
+                            ? 'rgba(201,162,39,0.2)'
+                            : isLocked
+                              ? 'rgba(255,255,255,0.03)'
+                              : `${tech.color}20`
+                      }`,
+                      opacity: isLocked ? 0.4 : 1,
+                    }}
+                  >
+                    {/* رأس البطاقة */}
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-9 h-9 rounded-xl flex items-center justify-center text-base"
+                        style={{
+                          background: isCompleted ? 'rgba(74,222,128,0.12)' : `${tech.color}12`,
+                          border: `1px solid ${isCompleted ? 'rgba(74,222,128,0.25)' : `${tech.color}25`}`,
+                        }}
+                      >
+                        {isCompleted ? '✅' : tech.icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] font-bold text-white truncate">{tech.nameAr}</span>
+                          <span className="text-[7px] px-1.5 py-0.5 rounded-full" style={{ background: `${tierInfo.color}12`, color: tierInfo.color }}>
+                            {catConfig.icon} {catConfig.nameAr}
+                          </span>
+                        </div>
+                        <div className="text-[8px] text-white/30 truncate">{tech.description}</div>
+                      </div>
+                    </div>
+
+                    {/* التأثيرات */}
+                    <div className="flex gap-1 flex-wrap">
+                      {tech.effects.map((effect, i) => (
+                        <span
+                          key={i}
+                          className="text-[7px] px-1.5 py-0.5 rounded-full"
+                          style={{ background: `${tech.color}10`, color: `${tech.color}cc` }}
+                        >
+                          {effect.description}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* معلومات التكلفة والوقت */}
+                    {!isCompleted && (
+                      <div className="flex items-center justify-between">
+                        <div className="flex gap-2 text-[8px] text-white/30">
+                          <span>⚙️ {tech.cost.scrap}</span>
+                          <span>📋 {tech.cost.intel}</span>
+                          <span>⏱️ {formatTime(tech.researchTime)}</span>
+                        </div>
+                        {isInProgress && (
+                          <span className="text-[8px] font-bold text-[#c9a227]">⏳ جاري البحث...</span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* المتطلبات */}
+                    {isLocked && tech.prerequisites.length > 0 && (
+                      <div className="text-[8px] text-white/20">
+                        يتطلب: {tech.prerequisites.map(p => {
+                          const prereqTech = TECH_TREE.find(t => t.id === p);
+                          const met = research.completedTechs.includes(p);
+                          return (
+                            <span key={p} style={{ color: met ? '#4ade80' : '#ef4444' }}>
+                              {met ? '✓' : '✗'} {prereqTech?.nameAr ?? p}{' '}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* زر البدء */}
+                    {canStart && !isCompleted && !isInProgress && (
+                      <button
+                        onClick={() => startResearch(tech.id)}
+                        className="w-full py-2 rounded-lg text-[9px] font-bold transition-all"
+                        style={{
+                          background: `${tech.color}15`,
+                          border: `1px solid ${tech.color}30`,
+                          color: tech.color,
+                        }}
+                      >
+                        🔬 بدء البحث — ⚙️{tech.cost.scrap} · 📋{tech.cost.intel}
+                      </button>
+                    )}
+
+                    {isAvailable && !canStart && !isInProgress && (
+                      <div className="text-[8px] text-center py-1 rounded-lg" style={{ background: 'rgba(239,68,68,0.06)', color: '#ef4444' }}>
+                        ⚠️ موارد غير كافية
+                      </div>
+                    )}
+
+                    {isCompleted && (
+                      <div className="text-[8px] text-center py-1 rounded-lg" style={{ background: 'rgba(74,222,128,0.06)', color: '#4ade80' }}>
+                        ✅ تم البحث — التأثيرات فعّالة
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         );

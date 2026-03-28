@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useGameStore } from '@/store/game-store';
+import { useGameStore, useWeatherState, useMoraleState, useFatigueState } from '@/store/game-store';
 import {
   TROOP_CONFIGS,
   TERRAIN_CONFIG,
@@ -14,6 +14,8 @@ import {
   type TimeOfDay,
   type TroopType,
 } from '@/lib/battle-engine';
+import { WEATHER_CONFIG, type WeatherType } from '@/lib/weather-system';
+import { SUPPLY_CONFIG, type SupplyType } from '@/lib/supply-system';
 
 export default function WarRoomUI() {
   const terrain = useGameStore((s) => s.terrain);
@@ -33,6 +35,11 @@ export default function WarRoomUI() {
   const selectedSector = useGameStore((s) => s.selectedSector);
   const attackSector = useGameStore((s) => s.attackSector);
   const setScreen = useGameStore((s) => s.setScreen);
+  const changeWeather = useGameStore((s) => s.changeWeather);
+
+  const weatherState = useWeatherState();
+  const moraleState = useMoraleState();
+  const fatigueState = useFatigueState();
 
   const hasTroops = waves.some(w => w.some(s => s.troopType !== null));
 
@@ -113,6 +120,21 @@ export default function WarRoomUI() {
             })}
           </div>
         </div>
+
+        {/* ═══ حالة الطقس ═══ */}
+        <WeatherSection
+          weatherState={weatherState}
+          changeWeather={changeWeather}
+        />
+
+        {/* ═══ الروح المعنوية والتعب ═══ */}
+        <MoraleFatigueSection
+          moraleState={moraleState}
+          fatigueState={fatigueState}
+        />
+
+        {/* ═══ حالة الإمدادات ═══ */}
+        <SupplyStatusSection />
 
         {/* القوات */}
         <div className="space-y-1.5">
@@ -231,6 +253,237 @@ export default function WarRoomUI() {
         </button>
 
         <div className="h-4" />
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════
+// قسم الطقس
+// ═══════════════════════════════
+
+function WeatherSection({
+  weatherState,
+  changeWeather,
+}: {
+  weatherState: ReturnType<typeof useWeatherState>;
+  changeWeather: (w: WeatherType) => void;
+}) {
+  const wConfig = weatherState.config;
+  const troopLabels: { key: keyof typeof wConfig.infantryModifier; label: string }[] = [
+    { key: 'attack', label: 'هجوم' },
+    { key: 'defense', label: 'دفاع' },
+    { key: 'speed', label: 'سرعة' },
+    { key: 'vision', label: 'رؤية' },
+  ];
+  const troopTypes: { type: 'infantry' | 'armor' | 'aviation'; label: string; icon: string }[] = [
+    { type: 'infantry', label: 'مشاة', icon: '🎖️' },
+    { type: 'armor', label: 'مدرعات', icon: '🛡️' },
+    { type: 'aviation', label: 'طيران', icon: '✈️' },
+  ];
+
+  const modMap = {
+    infantry: wConfig.infantryModifier,
+    armor: wConfig.armorModifier,
+    aviation: wConfig.aviationModifier,
+  };
+
+  return (
+    <div className="space-y-1.5">
+      <div className="text-[10px] font-bold text-white/60">🌤️ حالة الطقس</div>
+      <div
+        className="rounded-xl p-3 space-y-2"
+        style={{
+          background: 'rgba(0,0,0,0.3)',
+          border: `1px solid ${wConfig.fogDensity > 0.3 ? 'rgba(139,129,112,0.25)' : 'rgba(255,255,255,0.06)'}`,
+        }}
+      >
+        {/* رأس الطقس */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">{wConfig.icon}</span>
+            <div>
+              <div className="text-[11px] font-bold text-white">{wConfig.nameAr}</div>
+              <div className="text-[8px] text-white/30">{wConfig.description}</div>
+            </div>
+          </div>
+          {!wConfig.canFly && (
+            <span className="text-[8px] px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444' }}>
+              ✈️ معطّل
+            </span>
+          )}
+        </div>
+
+        {/* معاملات القوات */}
+        <div className="space-y-1">
+          <div className="grid grid-cols-5 gap-1 text-center text-[8px]">
+            <div className="text-white/20" />
+            {troopLabels.map(t => (
+              <div key={t.key} className="text-white/30">{t.label}</div>
+            ))}
+          </div>
+          {troopTypes.map(tt => (
+            <div key={tt.type} className="grid grid-cols-5 gap-1 text-center">
+              <div className="text-[9px] text-white/50 flex items-center gap-1">
+                <span>{tt.icon}</span>
+                <span>{tt.label}</span>
+              </div>
+              {troopLabels.map(t => {
+                const val = modMap[tt.type][t.key];
+                const isNegative = val < 1;
+                return (
+                  <div key={t.key} className="text-[9px] font-bold" style={{ color: isNegative ? '#ef4444' : val > 1 ? '#4ade80' : 'rgba(255,255,255,0.5)' }}>
+                    ×{val.toFixed(1)}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+
+        {/* أزرار تغيير الطقس */}
+        <div className="flex gap-1 flex-wrap">
+          {(['clear', 'rain', 'fog', 'snow', 'sandstorm', 'storm'] as WeatherType[]).map(w => {
+            const c = WEATHER_CONFIG[w];
+            const isActive = weatherState.weather === w;
+            return (
+              <button
+                key={w}
+                onClick={() => changeWeather(w)}
+                className="px-1.5 py-1 rounded-lg text-[8px] transition-all"
+                style={{
+                  background: isActive ? 'rgba(201,162,39,0.15)' : 'rgba(255,255,255,0.03)',
+                  border: `1px solid ${isActive ? 'rgba(201,162,39,0.3)' : 'rgba(255,255,255,0.05)'}`,
+                  opacity: isActive ? 1 : 0.5,
+                }}
+              >
+                {c.icon} {c.nameAr}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════
+// قسم الروح المعنوية والتعب
+// ═══════════════════════════════
+
+function MoraleFatigueSection({
+  moraleState,
+  fatigueState,
+}: {
+  moraleState: ReturnType<typeof useMoraleState>;
+  fatigueState: ReturnType<typeof useFatigueState>;
+}) {
+  const moraleConfig = {
+    rout: { nameAr: 'هروب', color: '#ef4444', icon: '🏃' },
+    demoralized: { nameAr: 'محبط', color: '#f97316', icon: '😞' },
+    shaken: { nameAr: 'متذبذب', color: '#fbbf24', icon: '😰' },
+    steady: { nameAr: 'ثابت', color: '#22c55e', icon: '💪' },
+    high: { nameAr: 'عالي', color: '#3b82f6', icon: '🔥' },
+  };
+
+  const moraleInfo = moraleConfig[moraleState.level];
+
+  return (
+    <div className="space-y-1.5">
+      <div className="text-[10px] font-bold text-white/60">💖 الروح المعنوية والتعب</div>
+      <div className="grid grid-cols-2 gap-2">
+        {/* الروح المعنوية */}
+        <div
+          className="rounded-xl p-2.5 space-y-1.5"
+          style={{ background: 'rgba(0,0,0,0.3)', border: `1px solid ${moraleInfo.color}25` }}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm">{moraleInfo.icon}</span>
+              <span className="text-[10px] font-bold" style={{ color: moraleInfo.color }}>{moraleInfo.nameAr}</span>
+            </div>
+            <span className="text-[10px] font-bold tabular-nums" style={{ color: moraleInfo.color }}>
+              {moraleState.value}%
+            </span>
+          </div>
+          <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{ width: `${moraleState.value}%`, background: moraleInfo.color }}
+            />
+          </div>
+          <div className="flex gap-1 text-[7px] text-white/25">
+            <span>⚔️ ×{moraleState.attackModifier.toFixed(1)}</span>
+            <span>🛡️ ×{moraleState.defenseModifier.toFixed(1)}</span>
+          </div>
+        </div>
+
+        {/* التعب */}
+        <div
+          className="rounded-xl p-2.5 space-y-1.5"
+          style={{ background: 'rgba(0,0,0,0.3)', border: `1px solid ${fatigueState.color}25` }}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm">{fatigueState.icon}</span>
+              <span className="text-[10px] font-bold" style={{ color: fatigueState.color }}>{fatigueState.nameAr}</span>
+            </div>
+            <span className="text-[10px] font-bold tabular-nums" style={{ color: fatigueState.color }}>
+              {fatigueState.value}%
+            </span>
+          </div>
+          <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{ width: `${fatigueState.value}%`, background: fatigueState.color }}
+            />
+          </div>
+          <div className="text-[7px] text-white/25">
+            ⚡ أداء ×{fatigueState.performanceModifier.toFixed(1)}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════
+// قسم حالة الإمدادات
+// ═══════════════════════════════
+
+function SupplyStatusSection() {
+  const supplyTypes: SupplyType[] = ['food', 'ammo', 'fuel', 'medical', 'parts'];
+  // قيم ثابتة للعرض (100% ممتلئ)
+  const staticValues: Record<SupplyType, number> = {
+    food: 100, ammo: 100, fuel: 100, medical: 100, parts: 100,
+  };
+
+  return (
+    <div className="space-y-1.5">
+      <div className="text-[10px] font-bold text-white/60">📦 حالة الإمدادات</div>
+      <div className="rounded-xl p-3 space-y-1.5" style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.06)' }}>
+        {supplyTypes.map((type) => {
+          const config = SUPPLY_CONFIG[type];
+          const value = staticValues[type];
+          return (
+            <div key={type} className="flex items-center gap-2">
+              <span className="text-sm w-5 text-center">{config.icon}</span>
+              <span className="text-[9px] text-white/50 w-16">{config.nameAr}</span>
+              <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${value}%`,
+                    background: value > 50 ? config.color : value > 20 ? '#fbbf24' : '#ef4444',
+                  }}
+                />
+              </div>
+              <span className="text-[8px] font-bold tabular-nums w-8 text-left" style={{ color: config.color }}>
+                {value}%
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
