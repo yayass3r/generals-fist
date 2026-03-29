@@ -1,13 +1,13 @@
 fc8a56933c4b1c8d796fdb8f7a9f9475
 ::res://::1774761809
-export_presets.cfg::TextFile::-1::1774761942::0::1::::<><>::
+export_presets.cfg::TextFile::-1::1774762846::0::1::::<><>::
 icon.png::CompressedTexture2D::6537282158153238132::1774761600::1774761809::1::::<><>::
 icon.svg::CompressedTexture2D::6218292257717247534::1774761600::1774761809::1::::<><>::
 ::res://assets/::1774761809
 logo.png::CompressedTexture2D::3745889004517766516::1774761600::1774761809::1::::<><>::
 splash.png::CompressedTexture2D::7061918719511138237::1774761600::1774761809::1::::<><>::
 ::res://autoload/::1774761600
-game_manager.gd::GDScript::-1::1774761600::0::1::::<>Node<>::
+game_manager.gd::GDScript::-1::1774762840::0::1::::<>Node<>::
 ::res://scenes/::1774761600
 achievements.gd::GDScript::-1::1774761600::0::1::::<>Control<>::
 achievements.tscn::PackedScene::-1::1774761978::0::1::::<><>::res://scenes/achievements.gd
@@ -19,7 +19,7 @@ campaign.gd::GDScript::-1::1774761600::0::1::::<>Control<>::
 campaign.tscn::PackedScene::-1::1774761600::0::1::::<><>::res://scenes/campaign.gd
 game_root.gd::GDScript::-1::1774761600::0::1::::<>Control<>::
 game_root.tscn::PackedScene::-1::1774761600::0::1::::<><>::res://scenes/game_root.gd
-main_menu.gd::GDScript::-1::1774761600::0::1::::<>Control<>::
+main_menu.gd::GDScript::-1::1774762803::0::1::::<>Control<>::
 main_menu.tscn::PackedScene::-1::1774761600::0::1::::<><>::res://scenes/main_menu.gd<>res://assets/logo.png
 missions.gd::GDScript::-1::1774761600::0::1::::<>Control<>::
 missions.tscn::PackedScene::-1::1774761600::0::1::::<><>::res://scenes/missions.gd
@@ -29,8 +29,4 @@ war_room.gd::GDScript::-1::1774761600::0::1::::<>Control<>::
 war_room.tscn::PackedScene::-1::1774761600::0::1::::<><>::res://scenes/war_room.gd
 world_map.gd::GDScript::-1::1774761600::0::1::::<>Control<>::
 world_map.tscn::PackedScene::-1::1774761600::0::1::::<><>::res://scenes/world_map.gd
-::res://scripts/::1774761600
-battle_engine.gd::GDScript::-1::1774761600::0::1::::BattleEngine<>RefCounted<>::
-hex_utils.gd::GDScript::-1::1774761600::0::1::::HexUtils<>RefCounted<>::
-main_menu.gd::GDScript::-1::1774761600::0::1::::<>Control<>::
-troop_data.gd::GDScript::-1::1774761600::0::1::::TroopData<>RefCounted<>::
+::res://scripts/::1774762817

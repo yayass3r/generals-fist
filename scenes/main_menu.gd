@@ -15,7 +15,7 @@ func _ready() -> void:
         var tween := create_tween()
         tween.tween_property(self, "modulate:a", 0.0, 0.0).set_duration(0.0)
         modulate.a = 0.0
-        tween.tween_property(self, "modulate:a", 1.0, 0.8).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_FADE)
+        tween.tween_property(self, "modulate:a", 1.0, 0.8).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE)
         # خلفية الشعار تتلاشى
         if logo:
                 logo.modulate.a = 0.0
