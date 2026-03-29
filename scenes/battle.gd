@@ -5,12 +5,12 @@ extends Control
 
 @onready var enemy_hp_bar: ProgressBar = $TopSection/EnemyBox/HBox/ProgressBar
 @onready var enemy_label: Label = $TopSection/EnemyBox/HBox/EnemyLabel
-@onready var player_hp_bar: ProgressBar = $PlayerSection/PlayerBox/HBox/ProgressBar
-@onready var player_label: Label = $PlayerSection/PlayerBox/HBox/PlayerLabel
+@onready var player_hp_bar: ProgressBar = $PlayerSection/HBox/ProgressBar
+@onready var player_label: Label = $PlayerSection/HBox/PlayerLabel
 @onready var log_text: RichTextLabel = $LogSection/LogText
-@onready var smoke_btn: Button = $TacticsSection/HBox/SmokeBtn
-@onready var air_btn: Button = $TacticsSection/HBox/AirBtn
-@onready var retreat_btn: Button = $TacticsSection/HBox/RetreatBtn
+@onready var smoke_btn: Button = $TacticsSection/SmokeBtn
+@onready var air_btn: Button = $TacticsSection/AirBtn
+@onready var retreat_btn: Button = $TacticsSection/RetreatBtn
 @onready var result_panel: PanelContainer = $ResultPanel
 @onready var result_title: Label = $ResultPanel/VBox/ResultTitle
 @onready var result_loot: Label = $ResultPanel/VBox/ResultLoot

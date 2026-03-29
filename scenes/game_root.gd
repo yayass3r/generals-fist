@@ -4,12 +4,12 @@ extends Control
 ## ═══════════════════════════════════════════════════════════════
 
 @onready var content_container: Control = $ContentContainer
-@onready var scrap_label: Label = $TopBar/ResourceBar/HBox/ScrapLabel
-@onready var fuel_label: Label = $TopBar/ResourceBar/HBox/FuelLabel
-@onready var intel_label: Label = $TopBar/ResourceBar/HBox/IntelLabel
-@onready var scrap_rate: Label = $TopBar/ResourceBar/HBox/ScrapRate
-@onready var fuel_rate: Label = $TopBar/ResourceBar/HBox/FuelRate
-@onready var intel_rate: Label = $TopBar/ResourceBar/HBox/IntelRate
+@onready var scrap_label: Label = $TopBar/ResourceBar/HBox/ScrapBox/HBox2/VBox/ScrapLabel
+@onready var fuel_label: Label = $TopBar/ResourceBar/HBox/FuelBox/HBox2/VBox/FuelLabel
+@onready var intel_label: Label = $TopBar/ResourceBar/HBox/IntelBox/HBox2/VBox/IntelLabel
+@onready var scrap_rate: Label = $TopBar/ResourceBar/HBox/ScrapBox/HBox2/VBox/ScrapRate
+@onready var fuel_rate: Label = $TopBar/ResourceBar/HBox/FuelBox/HBox2/VBox/FuelRate
+@onready var intel_rate: Label = $TopBar/ResourceBar/HBox/IntelBox/HBox2/VBox/IntelRate
 @onready var level_badge: Label = $TopBar/ResourceBar/HBox/LevelBadge
 @onready var nav_war: Button = $BottomNav/HBox/NavWar
 @onready var nav_map: Button = $BottomNav/HBox/NavMap

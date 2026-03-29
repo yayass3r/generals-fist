@@ -3,7 +3,7 @@ extends Control
 ## غرفة العمليات — نشر القوات وإعداد المعركة
 ## ═══════════════════════════════════════════════════════════════
 
-@onready var power_label: Label = $TopPanel/PowerBox/PowerVal
+@onready var power_label: Label = $TopPanel/PowerBox/HBox/PowerVal
 @onready var terrain_label: Label = $TopPanel/TerrainBox/HBox/TerrainVal
 @onready var weather_label: Label = $TopPanel/WeatherBox/HBox/WeatherVal
 @onready var morale_label: Label = $TopPanel/MoraleBox/HBox/MoraleVal

@@ -14,7 +14,7 @@ extends Control
 @onready var scout_btn: Button = $InfoPanel/VBox/BtnBox/ScoutBtn
 @onready var attack_map_btn: Button = $InfoPanel/VBox/BtnBox/AttackMapBtn
 @onready var fort_box: HBoxContainer = $InfoPanel/VBox/FortBox
-@onready var back_btn: Button = $TopBar/BackBtn
+@onready var back_btn: Button = $TopBar/HBox/BackBtn
 
 var selected_sector: Dictionary = {}
 
