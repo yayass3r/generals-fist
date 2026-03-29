@@ -964,7 +964,24 @@ func get_building_production(building: Dictionary) -> float:
         var level: int = building["level"]
         # تطبيق بونص الإنتاج من المستوى + التكنولوجيا
         var prod_mult: float = 1.0 + level_bonus_production
+        # بونص مصنع الحرب: +10% إنتاج لكل مستوى لجميع المنشآت
+        if building["id"] == "war_factory":
+                return base * level * prod_mult  # مصنع الحرب نفسه لا ينتج مباشرة
         return base * level * prod_mult
+
+func get_war_factory_production_boost() -> float:
+        """بونص مصنع الحرب: +10% إنتاج لكل مستوى"""
+        for b in buildings:
+                if b["id"] == "war_factory" and b["active"]:
+                        return 0.10 * b["level"]
+        return 0.0
+
+func get_training_camp_cost_reduction() -> float:
+        """تخفيض تكلفة التجنيد من معسكر التدريب: -5% لكل مستوى"""
+        for b in buildings:
+                if b["id"] == "training_camp" and b["active"]:
+                        return 0.05 * b["level"]
+        return 0.0
 
 func upgrade_building(building_id: String) -> bool:
         for b in buildings:
@@ -991,6 +1008,12 @@ func get_total_production_per_second() -> Dictionary:
         for b in buildings:
                 var prod: float = get_building_production(b)
                 result[b["resource_type"]] += prod
+        # تطبيق بونص مصنع الحرب على الإنتاج الكلي
+        var factory_boost: float = get_war_factory_production_boost()
+        if factory_boost > 0:
+                result["scrap"] *= (1.0 + factory_boost)
+                result["fuel"] *= (1.0 + factory_boost)
+                result["intel"] *= (1.0 + factory_boost)
         return result
 
 # ─── القوات ───
@@ -1043,6 +1066,10 @@ func recruit_troops(company_id: String, squad_index: int, count: int) -> int:
                                 return 0
                         var total_cost_scrap: int = stats["cost_scrap"] * available
                         var total_cost_fuel: int = stats["cost_fuel"] * available
+                        # تطبيق تخفيض معسكر التدريب
+                        var cost_reduction: float = get_training_camp_cost_reduction()
+                        total_cost_scrap = int(total_cost_scrap * (1.0 - cost_reduction))
+                        total_cost_fuel = int(total_cost_fuel * (1.0 - cost_reduction))
                         if scrap >= total_cost_scrap and fuel >= total_cost_fuel:
                                 scrap -= total_cost_scrap
                                 fuel -= total_cost_fuel
