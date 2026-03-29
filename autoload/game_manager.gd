@@ -1438,7 +1438,7 @@ func update_research(delta: float) -> void:
                                 research_in_progress = ""
                                 research_progress = 0.0
                                 check_achievements()
-				save_game()
+                                save_game()
                         return
 
 var _tech_attack_bonus: float = 0.0
